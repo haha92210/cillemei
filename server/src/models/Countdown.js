@@ -5,6 +5,25 @@
 
 const mongoose = require('mongoose');
 
+// 打卡记录子文档
+const checkInSchema = new mongoose.Schema({
+  date: {
+    type: String,
+    required: true,
+    comment: '打卡日期 YYYY-MM-DD'
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+    comment: '打卡时间'
+  },
+  note: {
+    type: String,
+    maxlength: 200,
+    comment: '打卡备注'
+  }
+}, { _id: false });
+
 const countdownSchema = new mongoose.Schema({
   // 关联用户
   userId: {
@@ -88,7 +107,30 @@ const countdownSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     comment: '排序权重'
-  }
+  },
+  
+  // 打卡记录
+  checkInHistory: {
+    type: [checkInSchema],
+    default: [],
+    comment: '打卡历史'
+  },
+  
+  // 连续打卡天数
+  streak: {
+    type: Number,
+    default: 0,
+    comment: '连续打卡天数'
+  },
+  
+  // 徽章列表
+  badges: [{
+    id: { type: String, comment: '徽章ID' },
+    name: { type: String, comment: '徽章名称' },
+    icon: { type: String, comment: '徽章图标' },
+    desc: { type: String, comment: '徽章描述' },
+    earnedAt: { type: Date, default: Date.now, comment: '获得时间' }
+  }]
 }, {
   timestamps: true,
   collection: 'countdowns'

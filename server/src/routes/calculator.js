@@ -6,11 +6,96 @@
 const express = require('express');
 const router = express.Router();
 const Calculator = require('../models/Calculator');
-const calculatorLogic = require('../utils/calculatorLogic');
+const { calculateResignationRisk, getRiskLevels, getCityCoefficients, getFamilyCoefficients } = require('../utils/calculatorLogic');
+
+/**
+ * @route   POST /api/calculator
+ * @desc    计算离职风险评估（主接口）
+ * @access  Public
+ */
+router.post('/', async (req, res) => {
+  try {
+    const { userId, inputs } = req.body;
+    
+    if (!inputs) {
+      return res.status(400).json({ 
+        success: false,
+        error: '缺少计算参数' 
+      });
+    }
+    
+    // 验证必要参数
+    const { savings, monthlyExpense, city, family } = inputs;
+    if (savings === undefined || monthlyExpense === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少必要参数：savings（存款月数）和 monthlyExpense（月支出）'
+      });
+    }
+    
+    // 使用算法计算离职风险
+    const calculationResult = calculateResignationRisk({
+      savings: parseFloat(savings),
+      monthlyExpense: parseFloat(monthlyExpense),
+      city: city || '二线城市',
+      family: family || '单身'
+    });
+    
+    // 构建返回结果
+    const result = {
+      riskLevel: calculationResult.result.riskLevel,
+      riskColor: calculationResult.result.riskColor,
+      riskEmoji: calculationResult.result.riskEmoji,
+      runwayMonths: calculationResult.result.runwayMonths,
+      actualMonthlyExpense: calculationResult.result.actualMonthlyExpense,
+      advice: calculationResult.result.advice,
+      analysis: calculationResult.analysis
+    };
+    
+    // 保存计算记录到数据库
+    let savedRecord = null;
+    if (userId) {
+      const calculator = new Calculator({
+        userId,
+        inputs: {
+          ...inputs,
+          cityCoeff: calculationResult.inputs.cityCoeff,
+          familyCoeff: calculationResult.inputs.familyCoeff
+        },
+        result: {
+          score: Math.round(calculationResult.result.runwayMonths * 10), // 基于月数计算分数
+          riskLevel: calculationResult.result.riskLevel,
+          suggestion: calculationResult.result.advice,
+          bestTime: calculationResult.analysis.summary,
+          runway: calculationResult.result.runwayMonths
+        },
+        isSaved: true
+      });
+      savedRecord = await calculator.save();
+    }
+    
+    res.json({
+      success: true,
+      message: '计算完成',
+      data: {
+        result,
+        inputs: calculationResult.inputs,
+        recordId: savedRecord ? savedRecord._id : null
+      }
+    });
+  } catch (error) {
+    console.error('计算失败:', error);
+    res.status(500).json({ 
+      success: false,
+      error: '计算失败',
+      message: error.message 
+    });
+  }
+});
 
 /**
  * @route   POST /api/calculator/calculate
- * @desc    计算离职风险评估
+ * @desc    计算离职风险评估（兼容旧接口）
  * @access  Public
  */
 router.post('/calculate', async (req, res) => {
@@ -18,31 +103,50 @@ router.post('/calculate', async (req, res) => {
     const { userId, inputs } = req.body;
     
     if (!inputs) {
-      return res.status(400).json({ error: '缺少计算参数' });
+      return res.status(400).json({ 
+        success: false,
+        error: '缺少计算参数' 
+      });
     }
     
     // 使用算法计算离职风险
-    const calculationResult = calculatorLogic.calculateResignationRisk(inputs);
+    const calculationResult = calculateResignationRisk(inputs);
     const result = calculationResult.result;
     
     // 如果有用户ID，保存记录
+    let savedRecord = null;
     if (userId) {
       const calculator = new Calculator({
         userId,
         inputs,
-        result,
+        result: {
+          score: Math.round(result.runwayMonths * 10),
+          riskLevel: result.riskLevel,
+          suggestion: result.advice,
+          bestTime: calculationResult.analysis.summary,
+          runway: result.runwayMonths
+        },
         isSaved: true
       });
-      await calculator.save();
+      savedRecord = await calculator.save();
     }
     
     res.json({
+      success: true,
       message: '计算完成',
-      result
+      data: {
+        result,
+        analysis: calculationResult.analysis,
+        recordId: savedRecord ? savedRecord._id : null
+      }
     });
   } catch (error) {
     console.error('计算失败:', error);
-    res.status(500).json({ error: '计算失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '计算失败',
+      message: error.message 
+    });
   }
 });
 
@@ -56,10 +160,13 @@ router.get('/history', async (req, res) => {
     const { userId, page = 1, limit = 10 } = req.query;
     
     if (!userId) {
-      return res.status(400).json({ error: '缺少用户ID' });
+      return res.status(400).json({ 
+        success: false,
+        error: '缺少用户ID' 
+      });
     }
     
-    const skip = (page - 1) * limit;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     
     const records = await Calculator.find({ userId, isSaved: true })
       .sort({ createdAt: -1 })
@@ -69,17 +176,24 @@ router.get('/history', async (req, res) => {
     const total = await Calculator.countDocuments({ userId, isSaved: true });
     
     res.json({
-      records,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
+      success: true,
+      data: {
+        records,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
       }
     });
   } catch (error) {
     console.error('获取历史记录失败:', error);
-    res.status(500).json({ error: '获取历史记录失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '获取历史记录失败',
+      message: error.message 
+    });
   }
 });
 
@@ -93,13 +207,23 @@ router.get('/:id', async (req, res) => {
     const record = await Calculator.findById(req.params.id);
     
     if (!record) {
-      return res.status(404).json({ error: '记录不存在' });
+      return res.status(404).json({ 
+        success: false,
+        error: '记录不存在' 
+      });
     }
     
-    res.json({ record });
+    res.json({ 
+      success: true,
+      data: { record } 
+    });
   } catch (error) {
     console.error('获取记录失败:', error);
-    res.status(500).json({ error: '获取记录失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '获取记录失败',
+      message: error.message 
+    });
   }
 });
 
@@ -112,181 +236,105 @@ router.delete('/:id', async (req, res) => {
   try {
     const { userId } = req.body;
     
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少用户ID'
+      });
+    }
+    
     const record = await Calculator.findOne({ _id: req.params.id, userId });
     if (!record) {
-      return res.status(404).json({ error: '记录不存在或无权限' });
+      return res.status(404).json({ 
+        success: false,
+        error: '记录不存在或无权限' 
+      });
     }
     
     await Calculator.findByIdAndDelete(req.params.id);
     
-    res.json({ message: '删除成功' });
+    res.json({ 
+      success: true,
+      message: '删除成功' 
+    });
   } catch (error) {
     console.error('删除记录失败:', error);
-    res.status(500).json({ error: '删除失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '删除失败',
+      message: error.message 
+    });
   }
 });
 
 /**
- * @route   GET /api/calculator/questions
+ * @route   GET /api/calculator/meta/config
+ * @desc    获取计算器配置（风险等级、系数等）
+ * @access  Public
+ */
+router.get('/meta/config', async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        riskLevels: getRiskLevels(),
+        cityCoefficients: getCityCoefficients(),
+        familyCoefficients: getFamilyCoefficients()
+      }
+    });
+  } catch (error) {
+    console.error('获取配置失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取配置失败',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * @route   GET /api/calculator/meta/questions
  * @desc    获取计算器问题列表
  * @access  Public
  */
 router.get('/meta/questions', async (req, res) => {
   res.json({
-    questions: [
-      {
-        id: 'age',
-        type: 'number',
-        label: '您的年龄',
-        placeholder: '18-65',
-        min: 18,
-        max: 65,
-        required: true
-      },
-      {
-        id: 'city',
-        type: 'select',
-        label: '所在城市级别',
-        options: ['一线城市', '二线城市', '三线城市', '四线及以下'],
-        required: true
-      },
-      {
-        id: 'savings',
-        type: 'number',
-        label: '您的存款可支撑（月）',
-        placeholder: '例如：6个月',
-        min: 0,
-        required: true
-      },
-      {
-        id: 'monthlyExpense',
-        type: 'number',
-        label: '每月支出',
-        placeholder: '元/月',
-        min: 0,
-        required: true
-      },
-      {
-        id: 'workYears',
-        type: 'number',
-        label: '工作年限',
-        placeholder: '年',
-        min: 0,
-        required: true
-      },
-      {
-        id: 'currentJobYears',
-        type: 'number',
-        label: '当前工作年限',
-        placeholder: '年',
-        min: 0,
-        required: true
-      },
-      {
-        id: 'factors',
-        type: 'rate',
-        label: '请为以下因素打分（1-10分）',
-        items: [
-          { id: 'stress', label: '工作压力' },
-          { id: 'growth', label: '成长空间' },
-          { id: 'satisfaction', label: '工作满意度' },
-          { id: 'health', label: '健康影响' },
-          { id: 'relationship', label: '人际关系' }
-        ],
-        min: 1,
-        max: 10
-      }
-    ]
+    success: true,
+    data: {
+      questions: [
+        {
+          id: 'savings',
+          type: 'number',
+          label: '您的存款可支撑（月）',
+          placeholder: '例如：6个月',
+          min: 0,
+          required: true
+        },
+        {
+          id: 'monthlyExpense',
+          type: 'number',
+          label: '每月支出',
+          placeholder: '元/月',
+          min: 0,
+          required: true
+        },
+        {
+          id: 'city',
+          type: 'select',
+          label: '所在城市级别',
+          options: ['一线城市', '二线城市', '三线城市'],
+          required: true
+        },
+        {
+          id: 'family',
+          type: 'select',
+          label: '家庭情况',
+          options: ['单身', '已婚', '有娃'],
+          required: true
+        }
+      ]
+    }
   });
 });
-
-// 计算逻辑
-function calculateResignationRisk(inputs) {
-  const { 
-    age, 
-    city, 
-    savings, 
-    monthlyExpense, 
-    workYears, 
-    currentJobYears, 
-    factors 
-  } = inputs;
-  
-  // 基础分数
-  let score = 50;
-  
-  // 1. 年龄因素 (20-35岁是黄金期)
-  if (age >= 20 && age <= 30) score += 15;
-  else if (age > 30 && age <= 35) score += 10;
-  else if (age > 35 && age <= 40) score += 0;
-  else score -= 10;
-  
-  // 2. 存款缓冲（每月支出计算）
-  const runway = savings;
-  if (runway >= 12) score += 20;
-  else if (runway >= 6) score += 10;
-  else if (runway >= 3) score += 0;
-  else score -= 15;
-  
-  // 3. 工作年限（稳定性考量）
-  if (currentJobYears >= 2) score += 10;
-  else if (currentJobYears >= 1) score += 5;
-  else score -= 5; // 刚入职就离职不太好
-  
-  // 4. 城市因素（就业机会）
-  const cityScores = {
-    '一线城市': 10,
-    '二线城市': 5,
-    '三线城市': 0,
-    '四线及以下': -5
-  };
-  score += cityScores[city] || 0;
-  
-  // 5. 各维度评分
-  if (factors) {
-    // 压力大减分
-    score -= (factors.stress - 5) * 1.5;
-    // 成长空间小减分
-    score -= (10 - factors.growth) * 1;
-    // 满意度低减分
-    score -= (10 - factors.satisfaction) * 1.5;
-    // 健康影响大减分
-    score -= (factors.health - 5) * 2;
-    // 人际关系差减分
-    score -= (10 - factors.relationship) * 1;
-  }
-  
-  // 确保分数在0-100之间
-  score = Math.max(0, Math.min(100, Math.round(score)));
-  
-  // 确定风险等级
-  let riskLevel, suggestion, bestTime;
-  
-  if (score >= 80) {
-    riskLevel = '安全';
-    suggestion = '当前状态良好，可以考虑寻找更好的机会！';
-    bestTime = '随时可以行动，准备好简历就出发吧！';
-  } else if (score >= 60) {
-    riskLevel = '谨慎';
-    suggestion = '整体情况尚可，但建议再做一些准备。';
-    bestTime = '建议再积累一些经验或储蓄后再考虑。';
-  } else if (score >= 40) {
-    riskLevel = '警告';
-    suggestion = '存在一定风险，建议谨慎决策。';
-    bestTime = '建议等待更好的时机，先解决当前问题。';
-  } else {
-    riskLevel = '危险';
-    suggestion = '当前不建议离职，风险较高！';
-    bestTime = '强烈建议暂缓离职计划，先改善现状。';
-  }
-  
-  return {
-    score,
-    riskLevel,
-    suggestion,
-    bestTime,
-    runway
-  };
-}
 
 module.exports = router;
