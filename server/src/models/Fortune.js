@@ -73,6 +73,24 @@ const fortuneSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
     comment: '是否已分享'
+  },
+  
+  // 扩展字段（算法生成的完整数据）
+  ext: {
+    overallScore: { type: Number, comment: '综合分数' },
+    levelColor: { type: String, comment: '等级颜色' },
+    levelDesc: { type: String, comment: '等级描述' },
+    category: { type: String, comment: '运势分类' },
+    luckyColor: {
+      name: { type: String, comment: '幸运色名称' },
+      value: { type: String, comment: '幸运色值' },
+      desc: { type: String, comment: '幸运色描述' }
+    },
+    luckyNumbers: [{ type: Number, comment: '幸运数字' }],
+    luckyDirection: { type: String, comment: '幸运方向' },
+    luckyHour: { type: String, comment: '吉时' },
+    suitable: [{ type: String, comment: '宜做事项' }],
+    avoid: [{ type: String, comment: '忌做事项' }]
   }
 }, {
   timestamps: true,

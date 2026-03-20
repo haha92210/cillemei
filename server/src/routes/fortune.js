@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const Fortune = require('../models/Fortune');
-const fortuneAlgorithm = require('../utils/fortuneAlgorithm');
+const { generateDailyFortune } = require('../utils/fortuneAlgorithm');
 
 /**
  * @route   GET /api/fortune/today
@@ -18,7 +18,10 @@ router.get('/today', async (req, res) => {
     const { userId } = req.query;
     
     if (!userId) {
-      return res.status(400).json({ error: '缺少用户ID' });
+      return res.status(400).json({ 
+        success: false,
+        error: '缺少用户ID' 
+      });
     }
     
     const today = new Date().toISOString().split('T')[0];
@@ -30,24 +33,34 @@ router.get('/today', async (req, res) => {
     
     if (!fortune) {
       return res.json({
-        hasDrawn: false,
-        message: '今日还未抽签'
+        success: true,
+        data: {
+          hasDrawn: false,
+          message: '今日还未抽签'
+        }
       });
     }
     
     res.json({
-      hasDrawn: true,
-      fortune
+      success: true,
+      data: {
+        hasDrawn: true,
+        fortune
+      }
     });
   } catch (error) {
     console.error('获取今日运势失败:', error);
-    res.status(500).json({ error: '获取运势失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '获取运势失败',
+      message: error.message 
+    });
   }
 });
 
 /**
  * @route   POST /api/fortune/draw
- * @desc    抽取今日运势
+ * @desc    抽取今日运势（使用算法生成一致运势）
  * @access  Public
  */
 router.post('/draw', async (req, res) => {
@@ -55,7 +68,10 @@ router.post('/draw', async (req, res) => {
     const { userId } = req.body;
     
     if (!userId) {
-      return res.status(400).json({ error: '缺少用户ID' });
+      return res.status(400).json({ 
+        success: false,
+        error: '缺少用户ID' 
+      });
     }
     
     const today = new Date().toISOString().split('T')[0];
@@ -64,43 +80,76 @@ router.post('/draw', async (req, res) => {
     const existing = await Fortune.findOne({ userId, drawDate: today });
     if (existing) {
       return res.status(400).json({ 
+        success: false,
         error: '今日已抽签，明天再来吧',
-        fortune: existing
+        data: { fortune: existing }
       });
     }
     
-    // 使用算法生成运势
-    const fortuneResult = fortuneAlgorithm.generateFortune(userId, today);
+    // 使用算法生成运势（基于日期+用户ID生成一致的运势）
+    const fortuneResult = generateDailyFortune(userId, today);
     
+    // 构建完整的运势数据
     const fortuneData = {
       userId,
       drawDate: today,
       result: {
-        level: fortuneResult.level.level,
-        title: fortuneResult.title,
+        level: fortuneResult.level,
+        title: `今日运势 - ${fortuneResult.level}`,
         content: fortuneResult.content,
         advice: fortuneResult.advice
       },
       details: {
-        career: { score: fortuneResult.scores.career, desc: '事业运' },
-        wealth: { score: fortuneResult.scores.wealth, desc: '财运' },
-        relationship: { score: fortuneResult.scores.relationship, desc: '人际关系' },
-        resignation: { score: fortuneResult.scores.resignation, desc: '辞职指数' }
+        career: { 
+          score: fortuneResult.dimensions.career.score, 
+          desc: `${fortuneResult.dimensions.career.label}：${fortuneResult.dimensions.career.desc}` 
+        },
+        wealth: { 
+          score: fortuneResult.dimensions.wealth.score, 
+          desc: `${fortuneResult.dimensions.wealth.label}：${fortuneResult.dimensions.wealth.desc}` 
+        },
+        relationship: { 
+          score: fortuneResult.dimensions.relationship.score, 
+          desc: `${fortuneResult.dimensions.relationship.label}：${fortuneResult.dimensions.relationship.desc}` 
+        },
+        resignation: { 
+          score: fortuneResult.dimensions.resignation.score, 
+          desc: `${fortuneResult.dimensions.resignation.label}：${fortuneResult.dimensions.resignation.desc}` 
+        }
       },
-      luckyColor: fortuneResult.luckyColor,
-      luckyNumber: fortuneResult.luckyNumber
+      // 扩展字段（用于前端展示）
+      ext: {
+        overallScore: fortuneResult.overallScore,
+        levelColor: fortuneResult.levelColor,
+        levelDesc: fortuneResult.levelDesc,
+        category: fortuneResult.category,
+        luckyColor: fortuneResult.luckyColor,
+        luckyNumbers: fortuneResult.luckyNumbers,
+        luckyDirection: fortuneResult.luckyDirection,
+        luckyHour: fortuneResult.luckyHour,
+        suitable: fortuneResult.suitable,
+        avoid: fortuneResult.avoid
+      }
     };
     
     const fortune = new Fortune(fortuneData);
     await fortune.save();
     
     res.json({
+      success: true,
       message: '抽签成功',
-      fortune
+      data: {
+        fortune,
+        fullResult: fortuneResult
+      }
     });
   } catch (error) {
     console.error('抽签失败:', error);
-    res.status(500).json({ error: '抽签失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '抽签失败',
+      message: error.message 
+    });
   }
 });
 
@@ -114,7 +163,10 @@ router.get('/history', async (req, res) => {
     const { userId, page = 1, limit = 10 } = req.query;
     
     if (!userId) {
-      return res.status(400).json({ error: '缺少用户ID' });
+      return res.status(400).json({ 
+        success: false,
+        error: '缺少用户ID' 
+      });
     }
     
     const skip = (page - 1) * limit;
@@ -127,17 +179,24 @@ router.get('/history', async (req, res) => {
     const total = await Fortune.countDocuments({ userId });
     
     res.json({
-      fortunes,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / limit)
+      success: true,
+      data: {
+        fortunes,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
       }
     });
   } catch (error) {
     console.error('获取运势历史失败:', error);
-    res.status(500).json({ error: '获取历史记录失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '获取历史记录失败',
+      message: error.message 
+    });
   }
 });
 
@@ -150,6 +209,13 @@ router.post('/share', async (req, res) => {
   try {
     const { userId, date } = req.body;
     
+    if (!userId || !date) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少用户ID或日期'
+      });
+    }
+    
     const fortune = await Fortune.findOneAndUpdate(
       { userId, drawDate: date },
       { shared: true },
@@ -157,43 +223,65 @@ router.post('/share', async (req, res) => {
     );
     
     if (!fortune) {
-      return res.status(404).json({ error: '未找到运势记录' });
+      return res.status(404).json({ 
+        success: false,
+        error: '未找到运势记录' 
+      });
     }
     
-    res.json({ message: '分享成功', fortune });
+    res.json({ 
+      success: true,
+      message: '分享成功', 
+      data: { fortune } 
+    });
   } catch (error) {
     console.error('分享运势失败:', error);
-    res.status(500).json({ error: '分享失败' });
+    res.status(500).json({ 
+      success: false,
+      error: '分享失败',
+      message: error.message 
+    });
   }
 });
 
-// 辅助函数
-function randomScore() {
-  return Math.floor(Math.random() * 40) + 60; // 60-100
-}
-
-function generateFortuneContent(level) {
-  const contents = {
-    '上上签': '今日运势极佳，适合大胆行动，把握机会！',
-    '上签': '运势良好，工作顺利，心情愉快。',
-    '中上签': '整体运势不错，小有收获，保持积极。',
-    '中签': '运势平稳，按部就班，稳扎稳打。',
-    '中下签': '略有波折，保持耐心，静待时机。',
-    '下签': '今日需谨慎，避免冲动决策，多休息。'
-  };
-  return contents[level] || '平平淡淡才是真。';
-}
-
-function generateAdvice(level) {
-  const advices = {
-    '上上签': '今天适合提加薪、谈项目、大胆表现！',
-    '上签': '可以主动争取机会，展现你的能力。',
-    '中上签': '保持现状，适度努力即可。',
-    '中签': '专注本职工作，不宜激进。',
-    '中下签': '少说话多做事，避免与同事冲突。',
-    '下签': '今天适合低调，重要决定改日再做。'
-  };
-  return advices[level] || '保持平常心。';
-}
+/**
+ * @route   GET /api/fortune/detail/:date
+ * @desc    获取指定日期的运势详情
+ * @access  Public
+ */
+router.get('/detail/:date', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const { date } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: '缺少用户ID'
+      });
+    }
+    
+    const fortune = await Fortune.findOne({ userId, drawDate: date });
+    
+    if (!fortune) {
+      return res.status(404).json({
+        success: false,
+        error: '未找到该日期的运势记录'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: { fortune }
+    });
+  } catch (error) {
+    console.error('获取运势详情失败:', error);
+    res.status(500).json({
+      success: false,
+      error: '获取运势详情失败',
+      message: error.message
+    });
+  }
+});
 
 module.exports = router;

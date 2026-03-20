@@ -197,4 +197,133 @@ router.get('/meta/types', async (req, res) => {
   });
 });
 
+/**
+ * @route   POST /api/countdown/:id/checkin
+ * @desc    每日打卡
+ * @access  Public
+ */
+router.post('/:id/checkin', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const today = new Date().toISOString().split('T')[0];
+    
+    const countdown = await Countdown.findOne({ _id: req.params.id, userId });
+    if (!countdown) {
+      return res.status(404).json({ error: '倒计时不存在或无权限' });
+    }
+    
+    if (countdown.status !== 'active') {
+      return res.status(400).json({ error: '倒计时已结束' });
+    }
+    
+    // 检查今天是否已打卡
+    const alreadyCheckedIn = countdown.checkInHistory && countdown.checkInHistory.some(
+      h => h.date === today
+    );
+    
+    if (alreadyCheckedIn) {
+      return res.status(400).json({ error: '今日已打卡' });
+    }
+    
+    // 添加打卡记录
+    if (!countdown.checkInHistory) {
+      countdown.checkInHistory = [];
+    }
+    
+    countdown.checkInHistory.push({
+      date: today,
+      timestamp: new Date()
+    });
+    
+    // 计算连续打卡天数
+    let streak = 1;
+    const history = countdown.checkInHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+    for (let i = 1; i < history.length; i++) {
+      const prevDate = new Date(history[i-1].date);
+      const currDate = new Date(history[i].date);
+      const diffDays = (prevDate - currDate) / (1000 * 60 * 60 * 24);
+      if (diffDays === 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    
+    countdown.streak = streak;
+    await countdown.save();
+    
+    // 检查徽章
+    const badges = checkBadges(countdown);
+    
+    res.json({
+      message: '打卡成功！',
+      streak: streak,
+      totalDays: countdown.checkInHistory.length,
+      badges: badges
+    });
+  } catch (error) {
+    console.error('打卡失败:', error);
+    res.status(500).json({ error: '打卡失败' });
+  }
+});
+
+/**
+ * @route   GET /api/countdown/:id/stats
+ * @desc    获取倒计时统计
+ * @access  Public
+ */
+router.get('/:id/stats', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    const countdown = await Countdown.findOne({ _id: req.params.id, userId });
+    if (!countdown) {
+      return res.status(404).json({ error: '倒计时不存在' });
+    }
+    
+    const totalDays = countdown.checkInHistory ? countdown.checkInHistory.length : 0;
+    const streak = countdown.streak || 0;
+    const badges = checkBadges(countdown);
+    
+    // 计算剩余天数
+    const daysLeft = Math.ceil((new Date(countdown.targetDate) - new Date()) / (1000 * 60 * 60 * 24));
+    
+    res.json({
+      totalDays: totalDays,
+      streak: streak,
+      daysLeft: daysLeft,
+      badges: badges,
+      checkInHistory: countdown.checkInHistory || []
+    });
+  } catch (error) {
+    console.error('获取统计失败:', error);
+    res.status(500).json({ error: '获取失败' });
+  }
+});
+
+// 检查徽章
+function checkBadges(countdown) {
+  const badges = [];
+  const totalDays = countdown.checkInHistory ? countdown.checkInHistory.length : 0;
+  const streak = countdown.streak || 0;
+  
+  if (totalDays >= 7) {
+    badges.push({ id: 'week', name: '一周战士', icon: '🏅', desc: '连续打卡7天' });
+  }
+  if (totalDays >= 30) {
+    badges.push({ id: 'month', name: '月度苟王', icon: '🥈', desc: '连续打卡30天' });
+  }
+  if (totalDays >= 100) {
+    badges.push({ id: 'century', name: '百日忍者', icon: '🥇', desc: '连续打卡100天' });
+  }
+  if (streak >= 7) {
+    badges.push({ id: 'streak7', name: '坚持者', icon: '🔥', desc: '连续7天不间断' });
+  }
+  if (countdown.status === 'completed') {
+    badges.push({ id: 'freedom', name: '自由人', icon: '🎉', desc: '达成目标' });
+  }
+  
+  return badges;
+}
+
 module.exports = router;

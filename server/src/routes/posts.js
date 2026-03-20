@@ -208,4 +208,187 @@ router.get('/meta/categories', async (req, res) => {
   });
 });
 
+/**
+ * @route   POST /api/posts/:id/comments
+ * @desc    添加评论
+ * @access  Public
+ */
+router.post('/:id/comments', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId, content, replyTo, replyToName } = req.body;
+    
+    if (!userId || !content) {
+      return res.status(400).json({ error: '缺少必要参数' });
+    }
+    
+    const post = await Post.findById(id);
+    if (!post || post.status !== 'active') {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+    
+    await post.addComment(userId, content, replyTo, replyToName);
+    
+    res.json({
+      message: '评论成功',
+      commentCount: post.stats.comments
+    });
+  } catch (error) {
+    console.error('添加评论失败:', error);
+    res.status(500).json({ error: '评论失败' });
+  }
+});
+
+/**
+ * @route   DELETE /api/posts/:id/comments/:commentId
+ * @desc    删除评论
+ * @access  Public
+ */
+router.delete('/:id/comments/:commentId', async (req, res) => {
+  try {
+    const { id, commentId } = req.params;
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: '缺少用户ID' });
+    }
+    
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+    
+    await post.deleteComment(commentId, userId);
+    
+    res.json({ message: '删除成功' });
+  } catch (error) {
+    console.error('删除评论失败:', error);
+    res.status(500).json({ error: error.message || '删除失败' });
+  }
+});
+
+/**
+ * @route   POST /api/posts/:id/like
+ * @desc    点赞
+ * @access  Public
+ */
+router.post('/:id/like', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: '缺少用户ID' });
+    }
+    
+    const post = await Post.findById(id);
+    if (!post || post.status !== 'active') {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+    
+    await post.like(userId);
+    
+    res.json({
+      message: '点赞成功',
+      likes: post.stats.likes
+    });
+  } catch (error) {
+    console.error('点赞失败:', error);
+    res.status(500).json({ error: '点赞失败' });
+  }
+});
+
+/**
+ * @route   POST /api/posts/:id/unlike
+ * @desc    取消点赞
+ * @access  Public
+ */
+router.post('/:id/unlike', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: '缺少用户ID' });
+    }
+    
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+    
+    await post.unlike(userId);
+    
+    res.json({
+      message: '取消点赞成功',
+      likes: post.stats.likes
+    });
+  } catch (error) {
+    console.error('取消点赞失败:', error);
+    res.status(500).json({ error: '取消点赞失败' });
+  }
+});
+
+/**
+ * @route   POST /api/posts/:id/same
+ * @desc    我也一样
+ * @access  Public
+ */
+router.post('/:id/same', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: '缺少用户ID' });
+    }
+    
+    const post = await Post.findById(id);
+    if (!post || post.status !== 'active') {
+      return res.status(404).json({ error: '帖子不存在' });
+    }
+    
+    await post.sameHere(userId);
+    
+    res.json({
+      message: '我也一样',
+      sameHere: post.stats.sameHere
+    });
+  } catch (error) {
+    console.error('操作失败:', error);
+    res.status(500).json({ error: '操作失败' });
+  }
+});
+
+/**
+ * @route   GET /api/posts/hot
+ * @desc    热榜
+ * @access  Public
+ */
+router.get('/hot', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+    
+    const posts = await Post.find({ status: 'active' })
+      .populate('userId', 'nickName avatarUrl')
+      .sort({ 'stats.likes': -1, createdAt: -1 })
+      .limit(parseInt(limit));
+    
+    // 匿名处理
+    const anonymousPosts = posts.map(post => ({
+      ...post.toObject(),
+      userId: undefined,
+      anonymousId: post.userId ? `用户${post.userId._id.toString().slice(-6)}` : '匿名用户'
+    }));
+    
+    res.json({
+      posts: anonymousPosts,
+      total: anonymousPosts.length
+    });
+  } catch (error) {
+    console.error('获取热榜失败:', error);
+    res.status(500).json({ error: '获取失败' });
+  }
+});
+
 module.exports = router;
