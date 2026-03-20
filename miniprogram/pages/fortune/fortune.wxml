@@ -1,0 +1,27 @@
+<!--pages/fortune/fortune.wxml-->
+<view class="container">
+  <view class="title text-center mb-30">🎯 每日运势</view>
+  
+  <view class="card fortune-result" wx:if="{{fortune}}">
+    <view class="fortune-badge">{{fortune.result.level}}</view>
+    <text class="fortune-title">{{fortune.result.title}}</text>
+    <text class="fortune-content">{{fortune.result.content}}</text>
+    <text class="fortune-advice">💡 {{fortune.result.advice}}</text>
+    
+    <view class="detail-grid">
+      <view class="detail-item" wx:for="{{fortune.details}}" wx:key="index">
+        <text class="detail-name">{{item.desc}}</text>
+        <text class="detail-score">{{item.score}}分</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="card" wx:else>
+    <view class="draw-area">
+      <text class="draw-hint">今天还没有抽签哦~</text>
+      <button class="btn btn-primary" bindtap="drawFortune">立即抽签</button>
+    </view>
+  </view>
+  
+  <button class="btn btn-default mt-30" bindtap="goBack">返回首页</button>
+</view>

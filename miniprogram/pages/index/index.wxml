@@ -1,0 +1,86 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 头部欢迎 -->
+  <view class="header">
+    <text class="greeting">{{greeting}}</text>
+    <text class="subtitle">今天也是想辞职的一天吗？</text>
+  </view>
+
+  <!-- 今日运势卡片 -->
+  <view class="card fortune-card" bindtap="goToFortune">
+    <view class="fortune-header">
+      <text class="fortune-title">🎯 今日运势</text>
+      <text class="fortune-status" wx:if="{{hasDrawn}}">已抽签</text>
+      <text class="fortune-status pending" wx:else">未抽签</text>
+    </view>
+    <view class="fortune-content" wx:if="{{todayFortune}}">
+      <text class="fortune-level">{{todayFortune.result.level}}</text>
+      <text class="fortune-text">{{todayFortune.result.content}}</text>
+    </view>
+    <view class="fortune-empty" wx:else>
+      <text>点击抽取今日职场运势</text>
+    </view>
+    <view class="card-arrow">›</view>
+  </view>
+
+  <!-- 功能入口 -->
+  <view class="feature-grid">
+    <view class="feature-item" bindtap="goToCalculator">
+      <view class="feature-icon" style="background: #FFF3E0;">🧮</view>
+      <text class="feature-name">离职计算器</text>
+      <text class="feature-desc">评估离职风险</text>
+    </view>
+    
+    <view class="feature-item" bindtap="goToCountdown">
+      <view class="feature-icon" style="background: #E8F5E9;">⏰</view>
+      <text class="feature-name">倒计时</text>
+      <text class="feature-desc">记录重要日子</text>
+    </view>
+    
+    <view class="feature-item" bindtap="goToTreehole">
+      <view class="feature-icon" style="background: #E3F2FD;">🌳</view>
+      <text class="feature-name">树洞</text>
+      <text class="feature-desc">匿名倾诉</text>
+    </view>
+  </view>
+
+  <!-- 快捷倒计时 -->
+  <view class="card countdown-card" wx:if="{{countdowns.length > 0}}">
+    <view class="section-header">
+      <text class="section-title">⏳ 我的倒计时</text>
+      <text class="section-more" bindtap="goToCountdown">查看全部</text>
+    </view>
+    <view class="countdown-list">
+      <view class="countdown-item" wx:for="{{countdowns}}" wx:key="_id">
+        <view class="countdown-info">
+          <text class="countdown-title">{{item.title}}</text>
+          <text class="countdown-date">{{item.targetDate}}</text>
+        </view>
+        <view class="countdown-days">
+          <text class="days-number">{{item.daysLeft}}</text>
+          <text class="days-text">天</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门树洞 -->
+  <view class="card posts-card">
+    <view class="section-header">
+      <text class="section-title">🔥 热门树洞</text>
+      <text class="section-more" bindtap="goToTreehole">更多</text>
+    </view>
+    <view class="post-list">
+      <view class="post-item" wx:for="{{hotPosts}}" wx:key="_id">
+        <view class="post-header">
+          <text class="post-category">{{item.category}}</text>
+          <text class="post-time">{{item.timeAgo}}</text>
+        </view>
+        <text class="post-content">{{item.content}}</text>
+        <view class="post-footer">
+          <text class="post-stats">👍 {{item.stats.likes}} · 💬 {{item.stats.comments}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,200 @@
+/**
+ * 倒计时路由
+ * /api/countdown
+ */
+
+const express = require('express');
+const router = express.Router();
+const Countdown = require('../models/Countdown');
+
+/**
+ * @route   GET /api/countdown
+ * @desc    获取用户的倒计时列表
+ * @access  Public
+ */
+router.get('/', async (req, res) => {
+  try {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ error: '缺少用户ID' });
+    }
+    
+    const now = new Date();
+    
+    // 获取所有未过期的倒计时
+    const countdowns = await Countdown.find({
+      userId,
+      status: { $in: ['active', 'completed'] },
+      $or: [
+        { targetDate: { $gte: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+        { status: 'active' }
+      ]
+    }).sort({ order: -1, targetDate: 1 });
+    
+    // 计算剩余天数
+    const countdownsWithDays = countdowns.map(cd => {
+      const obj = cd.toObject();
+      const target = new Date(cd.targetDate);
+      const diff = target - now;
+      const daysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      obj.daysLeft = daysLeft;
+      obj.isExpired = daysLeft < 0 && cd.status !== 'completed';
+      return obj;
+    });
+    
+    res.json({
+      countdowns: countdownsWithDays
+    });
+  } catch (error) {
+    console.error('获取倒计时失败:', error);
+    res.status(500).json({ error: '获取倒计时失败' });
+  }
+});
+
+/**
+ * @route   POST /api/countdown
+ * @desc    创建新倒计时
+ * @access  Public
+ */
+router.post('/', async (req, res) => {
+  try {
+    const { userId, title, type, targetDate, targetTime, description, reminder } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: '请先登录' });
+    }
+    
+    if (!title || !targetDate) {
+      return res.status(400).json({ error: '标题和目标日期不能为空' });
+    }
+    
+    const countdown = new Countdown({
+      userId,
+      title,
+      type: type || 'custom',
+      targetDate: new Date(targetDate),
+      targetTime: targetTime || '18:00',
+      description: description || '',
+      reminder: reminder || { enabled: true, daysBefore: [7, 3, 1] },
+      status: 'active'
+    });
+    
+    await countdown.save();
+    
+    res.status(201).json({
+      message: '创建成功',
+      countdown
+    });
+  } catch (error) {
+    console.error('创建倒计时失败:', error);
+    res.status(500).json({ error: '创建失败' });
+  }
+});
+
+/**
+ * @route   PUT /api/countdown/:id
+ * @desc    更新倒计时
+ * @access  Public
+ */
+router.put('/:id', async (req, res) => {
+  try {
+    const { userId, title, type, targetDate, targetTime, description, reminder, style, order } = req.body;
+    
+    const countdown = await Countdown.findOne({ _id: req.params.id, userId });
+    if (!countdown) {
+      return res.status(404).json({ error: '倒计时不存在或无权限' });
+    }
+    
+    if (title) countdown.title = title;
+    if (type) countdown.type = type;
+    if (targetDate) countdown.targetDate = new Date(targetDate);
+    if (targetTime) countdown.targetTime = targetTime;
+    if (description !== undefined) countdown.description = description;
+    if (reminder) countdown.reminder = reminder;
+    if (style) countdown.style = { ...countdown.style, ...style };
+    if (order !== undefined) countdown.order = order;
+    
+    await countdown.save();
+    
+    res.json({
+      message: '更新成功',
+      countdown
+    });
+  } catch (error) {
+    console.error('更新倒计时失败:', error);
+    res.status(500).json({ error: '更新失败' });
+  }
+});
+
+/**
+ * @route   DELETE /api/countdown/:id
+ * @desc    删除倒计时
+ * @access  Public
+ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    const countdown = await Countdown.findOne({ _id: req.params.id, userId });
+    if (!countdown) {
+      return res.status(404).json({ error: '倒计时不存在或无权限' });
+    }
+    
+    // 软删除
+    countdown.status = 'cancelled';
+    await countdown.save();
+    
+    res.json({ message: '删除成功' });
+  } catch (error) {
+    console.error('删除倒计时失败:', error);
+    res.status(500).json({ error: '删除失败' });
+  }
+});
+
+/**
+ * @route   POST /api/countdown/:id/complete
+ * @desc    标记倒计时完成
+ * @access  Public
+ */
+router.post('/:id/complete', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    const countdown = await Countdown.findOne({ _id: req.params.id, userId });
+    if (!countdown) {
+      return res.status(404).json({ error: '倒计时不存在或无权限' });
+    }
+    
+    countdown.status = 'completed';
+    countdown.completedAt = new Date();
+    await countdown.save();
+    
+    res.json({
+      message: '恭喜！目标已达成！',
+      countdown
+    });
+  } catch (error) {
+    console.error('标记完成失败:', error);
+    res.status(500).json({ error: '操作失败' });
+  }
+});
+
+/**
+ * @route   GET /api/countdown/types
+ * @desc    获取倒计时类型列表
+ * @access  Public
+ */
+router.get('/meta/types', async (req, res) => {
+  res.json({
+    types: [
+      { id: 'resignation', name: '辞职倒计时', icon: '🎉', defaultTitle: '离职日', color: '#FF6B6B' },
+      { id: 'bonus', name: '年终奖', icon: '💰', defaultTitle: '年终奖发放', color: '#FFD93D' },
+      { id: 'promotion', name: '晋升评估', icon: '📈', defaultTitle: '晋升考核', color: '#6BCB77' },
+      { id: 'holiday', name: '假期', icon: '🏖️', defaultTitle: '放假啦', color: '#4D96FF' },
+      { id: 'custom', name: '自定义', icon: '📅', defaultTitle: '重要日子', color: '#9B59B6' }
+    ]
+  });
+});
+
+module.exports = router;

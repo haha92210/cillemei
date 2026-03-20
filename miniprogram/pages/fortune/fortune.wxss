@@ -1,0 +1,80 @@
+/**pages/fortune/fortune.wxss**/
+.fortune-result {
+  text-align: center;
+  padding: 60rpx 40rpx;
+}
+
+.fortune-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+  color: white;
+  padding: 16rpx 40rpx;
+  border-radius: 40rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-bottom: 30rpx;
+}
+
+.fortune-title {
+  display: block;
+  font-size: 32rpx;
+  color: var(--text);
+  margin-bottom: 20rpx;
+}
+
+.fortune-content {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text-light);
+  line-height: 1.6;
+  margin-bottom: 20rpx;
+}
+
+.fortune-advice {
+  display: block;
+  font-size: 26rpx;
+  color: var(--primary);
+  background: var(--primary-light);
+  padding: 16rpx 24rpx;
+  border-radius: 12rpx;
+  margin: 20rpx 0;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+  margin-top: 30rpx;
+}
+
+.detail-item {
+  background: var(--bg);
+  padding: 20rpx;
+  border-radius: 12rpx;
+}
+
+.detail-name {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-bottom: 8rpx;
+}
+
+.detail-score {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.draw-area {
+  text-align: center;
+  padding: 60rpx 0;
+}
+
+.draw-hint {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text-light);
+  margin-bottom: 30rpx;
+}

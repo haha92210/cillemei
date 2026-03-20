@@ -1,0 +1,90 @@
+/**app.wxss**/
+page {
+  --primary: #FF6B6B;
+  --primary-light: #FFE5E5;
+  --secondary: #4ECDC4;
+  --warning: #FFD93D;
+  --text: #333333;
+  --text-light: #666666;
+  --text-lighter: #999999;
+  --bg: #F5F5F5;
+  --white: #FFFFFF;
+  --border: #EEEEEE;
+  --radius: 16rpx;
+  --shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+}
+
+.container {
+  padding: 30rpx;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: var(--shadow);
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx 40rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--white);
+}
+
+.btn-primary:active {
+  opacity: 0.8;
+}
+
+.btn-default {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mt-20 { margin-top: 20rpx; }
+.mt-30 { margin-top: 30rpx; }
+.mb-20 { margin-bottom: 20rpx; }
+.mb-30 { margin-bottom: 30rpx; }

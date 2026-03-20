@@ -1,0 +1,31 @@
+<!--posts/pages/list/list.wxml-->
+<view class="container">
+  <view class="post-tabs">
+    <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="tab {{currentTab === '吐槽' ? 'active' : ''}}" bindtap="switchTab" data-tab="吐槽">吐槽</view>
+    <view class="tab {{currentTab === '求助' ? 'active' : ''}}" bindtap="switchTab" data-tab="求助">求助</view>
+    <view class="tab {{currentTab === '分享' ? 'active' : ''}}" bindtap="switchTab" data-tab="分享">分享</view>
+  </view>
+  
+  <view class="post-list">
+    <view class="post-card" wx:for="{{posts}}" wx:key="_id">
+      <view class="post-header">
+        <view class="user-info">
+          <text class="avatar">🎭</text>
+          <text class="nickname">{{item.anonymousId || '匿名用户'}}</text>
+        </view>
+        <text class="category-tag">{{item.category}}</text>
+      </view>
+      <text class="post-content">{{item.content}}</text>
+      <view class="post-footer">
+        <text class="post-time">{{item.timeAgo}}</text>
+        <view class="post-actions">
+          <text class="action" bindtap="likePost" data-id="{{item._id}}">👍 {{item.stats.likes}}</text>
+          <text class="action">💬 {{item.stats.comments}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="float-btn" bindtap="createPost">+</view>
+</view>
