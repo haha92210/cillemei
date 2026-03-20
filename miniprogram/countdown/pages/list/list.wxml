@@ -1,0 +1,28 @@
+<!--countdown/pages/list/list.wxml-->
+<view class="container">
+  <view class="title text-center mb-30">⏰ 我的倒计时</view>
+  
+  <view class="countdown-list">
+    <view class="countdown-card" wx:for="{{countdowns}}" wx:key="_id" style="border-left-color: {{item.style.backgroundColor}}">
+      <view class="countdown-main">
+        <view class="countdown-icon">{{item.style.icon}}</view>
+        <view class="countdown-info">
+          <text class="countdown-title">{{item.title}}</text>
+          <text class="countdown-date">{{item.targetDate}}</text>
+        </view>
+      </view>
+      <view class="countdown-days">
+        <text class="days-number">{{item.daysLeft}}</text>
+        <text class="days-text">天</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="empty-state" wx:if="{{countdowns.length === 0}}">
+    <text class="empty-icon">📅</text>
+    <text class="empty-text">还没有倒计时</text>
+    <text class="empty-hint">添加第一个重要日子吧~</text>
+  </view>
+  
+  <button class="btn btn-primary float-bottom" bindtap="createCountdown">+ 新建倒计时</button>
+</view>

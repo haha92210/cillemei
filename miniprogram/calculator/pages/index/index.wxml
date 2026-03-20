@@ -1,0 +1,47 @@
+<!--calculator/pages/index/index.wxml-->
+<view class="container">
+  <view class="title text-center mb-30">🧮 离职风险评估</view>
+  
+  <view class="card calculator-card">
+    <view class="form-item">
+      <text class="label">您的年龄</text>
+      <input type="number" placeholder="18-65" value="{{inputs.age}}" bindinput="onInput" data-field="age"/>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">所在城市级别</text>
+      <picker bindchange="onCityChange" value="{{cityIndex}}" range="{{cities}}">
+        <view class="picker">{{inputs.city || '请选择'}}</view>
+      </picker>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">存款可支撑（月）</text>
+      <input type="number" placeholder="例如：6个月" value="{{inputs.savings}}" bindinput="onInput" data-field="savings"/>
+    </view>
+    
+    <view class="form-item">
+      <text class="label">当前工作年限</text>
+      <input type="digit" placeholder="年" value="{{inputs.currentJobYears}}" bindinput="onInput" data-field="currentJobYears"/>
+    </view>
+    
+    <view class="factors-section">
+      <text class="section-title">请为以下因素打分（1-10分）</text>
+      <view class="factor-item" wx:for="{{factors}}" wx:key="id">
+        <text class="factor-label">{{item.label}}</text>
+        <slider min="1" max="10" value="{{item.value}}" show-value bindchange="onFactorChange" data-id="{{item.id}}"/>
+      </view>
+    </view>
+    
+    <button class="btn btn-primary mt-30" bindtap="calculate">开始计算</button>
+  </view>
+  
+  <!-- 计算结果 -->
+  <view class="card result-card" wx:if="{{result}}">
+    <view class="result-score" style="color: {{scoreColor}}">{{result.score}}分</view>
+    <text class="result-level">{{result.riskLevel}}</text>
+    <text class="result-suggestion">{{result.suggestion}}</text>
+    <text class="result-besttime">{{result.bestTime}}</text>
+    <text class="result-runway">💰 资金可维持 {{result.runway}} 个月</text>
+  </view>
+</view>

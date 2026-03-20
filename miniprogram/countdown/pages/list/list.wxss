@@ -1,0 +1,96 @@
+/**countdown/pages/list/list.wxss**/
+.countdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.countdown-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 30rpx;
+  box-shadow: var(--shadow);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 8rpx solid;
+}
+
+.countdown-main {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.countdown-icon {
+  font-size: 48rpx;
+  width: 80rpx;
+  height: 80rpx;
+  background: var(--bg);
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.countdown-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.countdown-date {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-lighter);
+  margin-top: 6rpx;
+}
+
+.countdown-days {
+  display: flex;
+  align-items: baseline;
+}
+
+.days-number {
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.days-text {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-left: 4rpx;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 100rpx 0;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 20rpx;
+}
+
+.empty-text {
+  display: block;
+  font-size: 32rpx;
+  color: var(--text);
+  margin-bottom: 10rpx;
+}
+
+.empty-hint {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-lighter);
+}
+
+.float-bottom {
+  position: fixed;
+  bottom: 60rpx;
+  left: 30rpx;
+  right: 30rpx;
+}
