@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const Fortune = require('../models/Fortune');
+const fortuneAlgorithm = require('../utils/fortuneAlgorithm');
 
 /**
  * @route   GET /api/fortune/today
@@ -68,25 +69,26 @@ router.post('/draw', async (req, res) => {
       });
     }
     
-    // 生成运势结果（Day1 使用模拟数据）
-    const levels = ['上上签', '上签', '中上签', '中签', '中下签', '下签'];
-    const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+    // 使用算法生成运势
+    const fortuneResult = fortuneAlgorithm.generateFortune(userId, today);
     
     const fortuneData = {
       userId,
       drawDate: today,
       result: {
-        level: randomLevel,
-        title: '今日职场运势',
-        content: generateFortuneContent(randomLevel),
-        advice: generateAdvice(randomLevel)
+        level: fortuneResult.level.level,
+        title: fortuneResult.title,
+        content: fortuneResult.content,
+        advice: fortuneResult.advice
       },
       details: {
-        career: { score: randomScore(), desc: '事业运' },
-        wealth: { score: randomScore(), desc: '财运' },
-        relationship: { score: randomScore(), desc: '人际关系' },
-        resignation: { score: randomScore(), desc: '辞职指数' }
-      }
+        career: { score: fortuneResult.scores.career, desc: '事业运' },
+        wealth: { score: fortuneResult.scores.wealth, desc: '财运' },
+        relationship: { score: fortuneResult.scores.relationship, desc: '人际关系' },
+        resignation: { score: fortuneResult.scores.resignation, desc: '辞职指数' }
+      },
+      luckyColor: fortuneResult.luckyColor,
+      luckyNumber: fortuneResult.luckyNumber
     };
     
     const fortune = new Fortune(fortuneData);

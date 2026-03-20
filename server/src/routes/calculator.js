@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const Calculator = require('../models/Calculator');
+const calculatorLogic = require('../utils/calculatorLogic');
 
 /**
  * @route   POST /api/calculator/calculate
@@ -20,8 +21,9 @@ router.post('/calculate', async (req, res) => {
       return res.status(400).json({ error: '缺少计算参数' });
     }
     
-    // 执行计算逻辑
-    const result = calculateResignationRisk(inputs);
+    // 使用算法计算离职风险
+    const calculationResult = calculatorLogic.calculateResignationRisk(inputs);
+    const result = calculationResult.result;
     
     // 如果有用户ID，保存记录
     if (userId) {
