@@ -1,0 +1,80 @@
+<!--countdown/pages/edit/edit.wxml-->
+<view class="container">
+  <view class="title text-center mb-30">{{isEdit ? '编辑倒计时' : '新建倒计时'}}</view>
+  
+  <view class="card form-card">
+    <!-- 类型选择 -->
+    <view class="form-section">
+      <text class="section-label">选择类型</text>
+      <view class="type-grid">
+        <view 
+          class="type-item {{selectedType === item.id ? 'active' : ''}}" 
+          wx:for="{{types}}" 
+          wx:key="id"
+          bindtap="selectType"
+          data-type="{{item.id}}"
+          style="{{selectedType === item.id ? 'border-color: ' + item.color + '; background: ' + item.color + '10;' : ''}}"
+        >
+          <text class="type-icon">{{item.icon}}</text>
+          <text class="type-name">{{item.name}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 标题 -->
+    <view class="form-section">
+      <text class="section-label">标题</text>
+      <input 
+        class="form-input"
+        placeholder="给这个倒计时起个名字"
+        value="{{form.title}}"
+        bindinput="onTitleInput"
+        maxlength="50"
+      />
+    </view>
+    
+    <!-- 目标日期 -->
+    <view class="form-section">
+      <text class="section-label">目标日期</text>
+      <picker mode="date" value="{{form.targetDate}}" start="{{today}}" bindchange="onDateChange">
+        <view class="form-picker">
+          <text class="picker-icon">📅</text>
+          <text class="picker-value">{{form.targetDate || '请选择日期'}}</text>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 目标时间 -->
+    <view class="form-section">
+      <text class="section-label">目标时间（可选）</text>
+      <picker mode="time" value="{{form.targetTime}}" bindchange="onTimeChange">
+        <view class="form-picker">
+          <text class="picker-icon">⏰</text>
+          <text class="picker-value">{{form.targetTime}}</text>
+        </view>
+      </picker>
+    </view>
+    
+    <!-- 描述 -->
+    <view class="form-section">
+      <text class="section-label">备注（可选）</text>
+      <textarea 
+        class="form-textarea"
+        placeholder="添加一些备注信息..."
+        value="{{form.description}}"
+        bindinput="onDescInput"
+        maxlength="200"
+        auto-height
+      />
+    </view>
+  </view>
+  
+  <!-- 操作按钮 -->
+  <view class="action-buttons">
+    <button class="btn btn-primary btn-large" bindtap="save" loading="{{loading}}">
+      {{isEdit ? '保存修改' : '创建倒计时'}}
+    </button>
+    <button class="btn btn-default" bindtap="cancel">取消</button>
+    <button class="btn btn-danger" wx:if="{{isEdit}}" bindtap="delete">删除倒计时</button>
+  </view>
+</view>

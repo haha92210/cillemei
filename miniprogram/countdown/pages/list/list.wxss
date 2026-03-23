@@ -1,50 +1,122 @@
 /**countdown/pages/list/list.wxss**/
+
+/* 统计卡片 */
+.stats-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: white;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background: #e0e0e0;
+}
+
+/* 倒计时列表 */
 .countdown-list {
   display: flex;
   flex-direction: column;
   gap: 20rpx;
+  padding-bottom: 150rpx;
 }
 
 .countdown-card {
-  background: var(--white);
-  border-radius: var(--radius);
+  background: white;
+  border-radius: 20rpx;
   padding: 30rpx;
-  box-shadow: var(--shadow);
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-left: 8rpx solid;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.countdown-card.expired {
+  opacity: 0.7;
 }
 
 .countdown-main {
   display: flex;
   align-items: center;
   gap: 20rpx;
+  flex: 1;
 }
 
 .countdown-icon {
-  font-size: 48rpx;
-  width: 80rpx;
-  height: 80rpx;
-  background: var(--bg);
-  border-radius: 16rpx;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 20rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 44rpx;
+}
+
+.countdown-info {
+  flex: 1;
 }
 
 .countdown-title {
   display: block;
   font-size: 32rpx;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text);
+  margin-bottom: 8rpx;
 }
 
 .countdown-date {
   display: block;
   font-size: 24rpx;
-  color: var(--text-lighter);
-  margin-top: 6rpx;
+  color: var(--text-light);
+  margin-bottom: 8rpx;
+}
+
+.countdown-meta {
+  display: flex;
+  gap: 16rpx;
+}
+
+.streak-badge, .badge-count {
+  font-size: 22rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 20rpx;
+  background: #fff3e0;
+  color: #e65100;
+}
+
+/* 右侧区域 */
+.countdown-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12rpx;
 }
 
 .countdown-days {
@@ -52,8 +124,13 @@
   align-items: baseline;
 }
 
+.countdown-days.expired .days-number {
+  color: #999;
+  font-size: 28rpx;
+}
+
 .days-number {
-  font-size: 56rpx;
+  font-size: 52rpx;
   font-weight: 700;
   color: var(--primary);
 }
@@ -64,33 +141,103 @@
   margin-left: 4rpx;
 }
 
+.checkin-btn {
+  padding: 12rpx 28rpx;
+  background: var(--primary);
+  color: white;
+  border-radius: 24rpx;
+  font-size: 24rpx;
+}
+
+.checkin-btn.checked {
+  background: #e0e0e0;
+  color: #999;
+}
+
+/* 进度条 */
+.progress-bar {
+  width: 100%;
+  height: 6rpx;
+  background: #f0f0f0;
+  border-radius: 3rpx;
+  margin-top: 20rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3rpx;
+  transition: width 0.5s ease;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 150rpx 40rpx;
+}
+
+.loading-spinner {
+  width: 60rpx;
+  height: 60rpx;
+  border: 6rpx solid #f3f3f3;
+  border-top: 6rpx solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 空状态 */
 .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 150rpx 40rpx;
   text-align: center;
-  padding: 100rpx 0;
 }
 
 .empty-icon {
-  font-size: 80rpx;
-  display: block;
-  margin-bottom: 20rpx;
+  font-size: 100rpx;
+  margin-bottom: 30rpx;
 }
 
 .empty-text {
   display: block;
   font-size: 32rpx;
   color: var(--text);
-  margin-bottom: 10rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
 }
 
 .empty-hint {
   display: block;
   font-size: 26rpx;
-  color: var(--text-lighter);
+  color: var(--text-light);
 }
 
+/* 底部按钮 */
 .float-bottom {
   position: fixed;
-  bottom: 60rpx;
-  left: 30rpx;
-  right: 30rpx;
+  bottom: 40rpx;
+  left: 40rpx;
+  right: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 30rpx !important;
+  font-size: 32rpx !important;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 107, 0.4);
+}
+
+.btn-icon {
+  font-size: 36rpx;
+  font-weight: 300;
 }

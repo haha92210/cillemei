@@ -1,0 +1,127 @@
+/**countdown/pages/edit/edit.wxss**/
+
+.form-card {
+  padding: 40rpx;
+}
+
+.form-section {
+  margin-bottom: 40rpx;
+}
+
+.form-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20rpx;
+}
+
+/* 类型网格 */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20rpx;
+}
+
+.type-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 20rpx;
+  background: #f8f9fa;
+  border-radius: 16rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.3s;
+}
+
+.type-item.active {
+  border-color: var(--primary);
+}
+
+.type-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.type-name {
+  font-size: 24rpx;
+  color: var(--text);
+}
+
+/* 表单输入 */
+.form-input {
+  background: #f8f9fa;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: var(--text);
+  border: 2rpx solid transparent;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  background: white;
+}
+
+.form-picker {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #f8f9fa;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: var(--text);
+}
+
+.picker-icon {
+  font-size: 36rpx;
+}
+
+.picker-value {
+  flex: 1;
+}
+
+.form-textarea {
+  background: #f8f9fa;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: var(--text);
+  border: 2rpx solid transparent;
+  width: 100%;
+  min-height: 160rpx;
+  box-sizing: border-box;
+}
+
+.form-textarea:focus {
+  border-color: var(--primary);
+  background: white;
+}
+
+/* 操作按钮 */
+.action-buttons {
+  margin-top: 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.btn-large {
+  padding: 30rpx !important;
+  font-size: 32rpx !important;
+}
+
+.btn-danger {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.btn-danger::after {
+  border: none;
+}

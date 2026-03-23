@@ -1,6 +1,11 @@
 /**calculator/pages/index/index.wxss**/
+
 .calculator-card {
   padding: 40rpx;
+}
+
+.form-section {
+  margin-bottom: 30rpx;
 }
 
 .form-item {
@@ -11,80 +16,253 @@
   display: block;
   font-size: 28rpx;
   color: var(--text);
+  margin-bottom: 16rpx;
+  font-weight: 500;
+}
+
+input {
+  background: #f8f9fa;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: var(--text);
+  border: 2rpx solid transparent;
+  transition: all 0.3s;
+}
+
+input:focus {
+  border-color: var(--primary);
+  background: white;
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #f8f9fa;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: var(--text);
+}
+
+.picker-icon {
+  font-size: 32rpx;
+}
+
+/* 公式提示 */
+.formula-hint {
+  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+  padding: 30rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.hint-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
   margin-bottom: 12rpx;
 }
 
-input, .picker {
-  background: var(--bg);
-  padding: 20rpx 24rpx;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  color: var(--text);
-}
-
-.factors-section {
-  margin-top: 40rpx;
-  padding-top: 40rpx;
-  border-top: 1rpx solid var(--border);
-}
-
-.section-title {
+.hint-text {
   display: block;
-  font-size: 28rpx;
-  color: var(--text);
-  margin-bottom: 20rpx;
-}
-
-.factor-item {
-  margin-bottom: 20rpx;
-}
-
-.factor-label {
-  display: block;
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: var(--text-light);
-  margin-bottom: 10rpx;
+  margin-bottom: 16rpx;
+}
+
+.coeff-hints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.coeff-item {
+  font-size: 22rpx;
+  color: var(--primary);
+  background: white;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.btn-large {
+  padding: 30rpx !important;
+  font-size: 32rpx !important;
+}
+
+/* 结果容器 */
+.result-container {
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .result-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* 风险头部 */
+.risk-header {
+  padding: 50rpx 40rpx;
   text-align: center;
-  padding: 60rpx 40rpx;
-  margin-top: 30rpx;
 }
 
-.result-score {
-  font-size: 80rpx;
-  font-weight: 700;
-  margin-bottom: 10rpx;
-}
-
-.result-level {
+.risk-emoji {
   display: block;
-  font-size: 40rpx;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 20rpx;
+  font-size: 80rpx;
+  margin-bottom: 16rpx;
 }
 
-.result-suggestion {
+.risk-level {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 700;
+}
+
+/* 关键数据 */
+.key-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.metric-item {
+  flex: 1;
+  text-align: center;
+}
+
+.metric-value {
+  display: block;
+  font-size: 56rpx;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8rpx;
+}
+
+.metric-label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.metric-divider {
+  width: 2rpx;
+  height: 80rpx;
+  background: #e0e0e0;
+}
+
+/* 建议 */
+.advice-section {
+  padding: 40rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.advice-title {
   display: block;
   font-size: 28rpx;
+  font-weight: 600;
   color: var(--text);
   margin-bottom: 16rpx;
 }
 
-.result-besttime {
+.advice-text {
   display: block;
-  font-size: 26rpx;
-  color: var(--text-light);
+  font-size: 28rpx;
+  color: var(--text);
+  line-height: 1.7;
+}
+
+/* 详细分析 */
+.analysis-section {
+  padding: 40rpx;
+  border-bottom: 2rpx solid #f5f5f5;
+}
+
+.analysis-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16rpx;
+}
+
+.analysis-summary {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text);
+  line-height: 1.6;
   margin-bottom: 20rpx;
 }
 
-.result-runway {
+.suggestions-title {
   display: block;
   font-size: 26rpx;
-  color: var(--secondary);
-  background: #E0F7FA;
-  padding: 16rpx;
-  border-radius: 12rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12rpx;
+}
+
+.suggestion-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+
+.suggestion-bullet {
+  color: var(--primary);
+  font-size: 28rpx;
+  line-height: 1.4;
+}
+
+.suggestion-text {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--text-light);
+  line-height: 1.5;
+}
+
+/* 系数说明 */
+.coeff-section {
+  padding: 40rpx;
+}
+
+.coeff-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16rpx;
+}
+
+.coeff-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+/* 结果操作 */
+.result-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 30rpx;
+}
+
+.result-actions .btn {
+  flex: 1;
 }

@@ -2,46 +2,138 @@
 <view class="container">
   <view class="title text-center mb-30">🧮 离职风险评估</view>
   
-  <view class="card calculator-card">
-    <view class="form-item">
-      <text class="label">您的年龄</text>
-      <input type="number" placeholder="18-65" value="{{inputs.age}}" bindinput="onInput" data-field="age"/>
-    </view>
-    
-    <view class="form-item">
-      <text class="label">所在城市级别</text>
-      <picker bindchange="onCityChange" value="{{cityIndex}}" range="{{cities}}">
-        <view class="picker">{{inputs.city || '请选择'}}</view>
-      </picker>
-    </view>
-    
-    <view class="form-item">
-      <text class="label">存款可支撑（月）</text>
-      <input type="number" placeholder="例如：6个月" value="{{inputs.savings}}" bindinput="onInput" data-field="savings"/>
-    </view>
-    
-    <view class="form-item">
-      <text class="label">当前工作年限</text>
-      <input type="digit" placeholder="年" value="{{inputs.currentJobYears}}" bindinput="onInput" data-field="currentJobYears"/>
-    </view>
-    
-    <view class="factors-section">
-      <text class="section-title">请为以下因素打分（1-10分）</text>
-      <view class="factor-item" wx:for="{{factors}}" wx:key="id">
-        <text class="factor-label">{{item.label}}</text>
-        <slider min="1" max="10" value="{{item.value}}" show-value bindchange="onFactorChange" data-id="{{item.id}}"/>
+  <!-- 输入表单 -->
+  <view class="card calculator-card" wx:if="{{!showResult}}">
+    <view class="form-section">
+      <view class="form-item">
+        <text class="label">💰 存款金额（元）</text>
+        <input 
+          type="digit" 
+          placeholder="请输入你的存款金额" 
+          value="{{inputs.savings}}" 
+          bindinput="onInput" 
+          data-field="savings"
+        />
+      </view>
+      
+      <view class="form-item">
+        <text class="label">💵 月薪（元，可选）</text>
+        <input 
+          type="digit" 
+          placeholder="请输入你的月薪" 
+          value="{{inputs.monthlyIncome}}" 
+          bindinput="onInput" 
+          data-field="monthlyIncome"
+        />
+      </view>
+      
+      <view class="form-item">
+        <text class="label">💸 月支出（元）</text>
+        <input 
+          type="digit" 
+          placeholder="请输入每月固定支出" 
+          value="{{inputs.monthlyExpense}}" 
+          bindinput="onInput" 
+          data-field="monthlyExpense"
+        />
+      </view>
+      
+      <view class="form-item">
+        <text class="label">🏙️ 所在城市</text>
+        <picker bindchange="onCityChange" value="{{cityIndex}}" range="{{cities}}">
+          <view class="picker">
+            <text class="picker-icon">📍</text>
+            <text>{{inputs.city}}</text>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="form-item">
+        <text class="label">👨‍👩‍👧 家庭情况</text>
+        <picker bindchange="onFamilyChange" value="{{familyIndex}}" range="{{families}}">
+          <view class="picker">
+            <text class="picker-icon">👤</text>
+            <text>{{inputs.family}}</text>
+          </view>
+        </picker>
       </view>
     </view>
     
-    <button class="btn btn-primary mt-30" bindtap="calculate">开始计算</button>
+    <view class="formula-hint">
+      <text class="hint-title">📊 计算公式</text>
+      <text class="hint-text">可支撑月数 = 存款 ÷ (月支出 × 城市系数 × 家庭系数)</text>
+      <view class="coeff-hints">
+        <text class="coeff-item">一线城市 ×1.2</text>
+        <text class="coeff-item">二线城市 ×1.0</text>
+        <text class="coeff-item">三线城市 ×0.8</text>
+      </view>
+    </view>
+    
+    <button class="btn btn-primary btn-large mt-30" bindtap="calculate" loading="{{loading}}">
+      <text wx:if="{{!loading}}">开始计算</text>
+      <text wx:else>计算中...</text>
+    </button>
   </view>
   
   <!-- 计算结果 -->
-  <view class="card result-card" wx:if="{{result}}">
-    <view class="result-score" style="color: {{scoreColor}}">{{result.score}}分</view>
-    <text class="result-level">{{result.riskLevel}}</text>
-    <text class="result-suggestion">{{result.suggestion}}</text>
-    <text class="result-besttime">{{result.bestTime}}</text>
-    <text class="result-runway">💰 资金可维持 {{result.runway}} 个月</text>
+  <view class="result-container" wx:if="{{showResult && result}}">
+    <view class="card result-card" style="border-top: 8rpx solid {{result.result.riskColor}};">
+      <!-- 风险等级 -->
+      <view class="risk-header" style="background: {{result.result.riskColor}}15;">
+        <text class="risk-emoji">{{result.result.riskEmoji}}</text>
+        <text class="risk-level" style="color: {{result.result.riskColor}};">{{result.result.riskLevel}}</text>
+      </view>
+      
+      <!-- 关键数据 -->
+      <view class="key-metrics">
+        <view class="metric-item">
+          <text class="metric-value">{{result.result.runwayMonths}}</text>
+          <text class="metric-label">可支撑月数</text>
+        </view>
+        <view class="metric-divider"></view>
+        <view class="metric-item">
+          <text class="metric-value">{{result.result.actualMonthlyExpense}}</text>
+          <text class="metric-label">实际月支出(元)</text>
+        </view>
+      </view>
+      
+      <!-- 建议 -->
+      <view class="advice-section">
+        <text class="advice-title">💡 建议</text>
+        <text class="advice-text">{{result.result.advice}}</text>
+      </view>
+      
+      <!-- 详细分析 -->
+      <view class="analysis-section" wx:if="{{result.analysis}}">
+        <text class="analysis-title">📋 详细分析</text>
+        <text class="analysis-summary">{{result.analysis.summary}}</text>
+        
+        <view class="suggestions-list" wx:if="{{result.analysis.suggestions && result.analysis.suggestions.length > 0}}">
+          <text class="suggestions-title">改进建议：</text>
+          <view class="suggestion-item" wx:for="{{result.analysis.suggestions}}" wx:key="index">
+            <text class="suggestion-bullet">•</text>
+            <text class="suggestion-text">{{item}}</text>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 系数说明 -->
+      <view class="coeff-section">
+        <text class="coeff-title">计算系数</text>
+        <view class="coeff-row">
+          <text>城市系数 ({{result.inputs.city}}): {{result.inputs.cityCoeff}}</text>
+          <text>家庭系数 ({{result.inputs.family}}): {{result.inputs.familyCoeff}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="result-actions">
+      <button class="btn btn-primary" open-type="share">分享结果</button>
+      <button class="btn btn-default" bindtap="reset">重新计算</button>
+    </view>
   </view>
+  
+  <!-- 隐藏的画布用于生成分享图片 -->
+  <canvas canvas-id="shareCanvas" style="width: 300px; height: 400px; position: fixed; left: -9999px;"></canvas>
 </view>

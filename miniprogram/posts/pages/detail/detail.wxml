@@ -1,0 +1,140 @@
+<!--posts/pages/detail/detail.wxml-->
+<view class="container">
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading && !post}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+  
+  <!-- 帖子内容 -->
+  <view class="post-detail" wx:if="{{post}}">
+    <!-- 帖子头部 -->
+    <view class="post-header">
+      <view class="user-info">
+        <view class="avatar">{{post.mood || '🎭'}}</view>
+        <view class="user-meta">
+          <text class="nickname">{{post.anonymousId || '匿名用户'}}</text>
+          <text class="post-time">{{post.timeAgo}}</text>
+        </view>
+      </view>
+      <view class="category-tag" style="background: {{post.category === '吐槽' ? '#ffebee' : post.category === '求助' ? '#fff3e0' : post.category === '分享' ? '#e8f5e9' : '#f3e5f5'}}; color: {{post.category === '吐槽' ? '#c62828' : post.category === '求助' ? '#e65100' : post.category === '分享' ? '#2e7d32' : '#7b1fa2'}};">
+        {{post.category}}
+      </view>
+    </view>
+    
+    <!-- 帖子内容 -->
+    <view class="post-content">
+      <text class="content-text">{{post.content}}</text>
+      <view class="post-tags" wx:if="{{post.tags && post.tags.length > 0}}">
+        <text class="tag" wx:for="{{post.tags}}" wx:key="index">#{{item}}</text>
+      </view>
+    </view>
+    
+    <!-- 帖子统计 -->
+    <view class="post-stats">
+      <view class="stat-item">
+        <text class="stat-icon">👁</text>
+        <text class="stat-value">{{post.stats.views || 0}} 浏览</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-icon">❤️</text>
+        <text class="stat-value">{{post.stats.likes || 0}} 赞</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-icon">💬</text>
+        <text class="stat-value">{{post.stats.comments || 0}} 评论</text>
+      </view>
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="post-actions">
+      <view class="action-btn {{post.isLiked ? 'active' : ''}}" bindtap="likePost">
+        <text class="action-icon">{{post.isLiked ? '❤️' : '🤍'}}</text>
+        <text class="action-text">{{post.isLiked ? '已赞' : '点赞'}}</text>
+      </view>
+      <view class="action-btn" bindtap="sameHere">
+        <text class="action-icon">🙋</text>
+        <text class="action-text">我也一样 {{post.stats.sameHere ? '(' + post.stats.sameHere + ')' : ''}}</text>
+      </view>
+      <button class="action-btn share-btn" open-type="share">
+        <text class="action-icon">📤</text>
+        <text class="action-text">分享</text>
+      </button>
+    </view>
+  </view>
+  
+  <!-- 评论区 -->
+  <view class="comments-section" wx:if="{{post}}">
+    <view class="section-header">
+      <text class="section-title">评论 ({{post.stats.comments || 0}})</text>
+    </view>
+    
+    <!-- 评论列表 -->
+    <view class="comment-list" wx:if="{{post.comments && post.comments.length > 0}}">
+      <view class="comment-item" wx:for="{{post.comments}}" wx:key="_id">
+        <view class="comment-avatar">{{item.mood || '💬'}}</view>
+        <view class="comment-body">
+          <view class="comment-header">
+            <text class="comment-author">{{item.anonymousId || '匿名用户'}}</text>
+            <text class="comment-time">{{item.timeAgo}}</text>
+          </view>
+          <view class="comment-content">
+            <text class="reply-to" wx:if="{{item.replyToName}}">回复 {{item.replyToName}}: </text>
+            <text>{{item.content}}</text>
+          </view>
+          <view class="comment-actions">
+            <view 
+              class="comment-action {{item.isLiked ? 'liked' : ''}}" 
+              bindtap="likeComment"
+              data-id="{{item._id}}"
+            >
+              <text>{{item.isLiked ? '❤️' : '🤍'}}</text>
+              <text>{{item.likes || 0}}</text>
+            </view>
+            <view 
+              class="comment-action"
+              bindtap="replyComment"
+              data-id="{{item._id}}"
+              data-name="{{item.anonymousId || '匿名用户'}}"
+            >
+              <text>💬 回复</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 空评论状态 -->
+    <view class="empty-comments" wx:else>
+      <text class="empty-icon">💭</text>
+      <text class="empty-text">暂无评论</text>
+      <text class="empty-hint">来发表第一条评论吧~</text>
+    </view>
+  </view>
+  
+  <!-- 评论输入框 -->
+  <view class="comment-input-bar" wx:if="{{post}}">
+    <view class="reply-info" wx:if="{{replyingTo}}">
+      <text>回复 {{replyingTo.name}}</text>
+      <text class="cancel-reply" bindtap="cancelReply">✕</text>
+    </view>
+    <view class="input-row">
+      <input 
+        class="comment-input"
+        placeholder="{{replyingTo ? '回复评论...' : '写下你的评论...'}}"
+        value="{{commentText}}"
+        bindinput="onCommentInput"
+        confirm-type="send"
+        bindconfirm="submitComment"
+        maxlength="500"
+      />
+      <button 
+        class="send-btn {{commentText ? 'active' : ''}}" 
+        bindtap="submitComment"
+        disabled="{{!commentText}}"
+      >
+        发送
+      </button>
+    </view>
+  </view>
+</view>

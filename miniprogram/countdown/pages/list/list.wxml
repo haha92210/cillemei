@@ -2,27 +2,92 @@
 <view class="container">
   <view class="title text-center mb-30">⏰ 我的倒计时</view>
   
+  <!-- 统计卡片 -->
+  <view class="stats-card" wx:if="{{countdowns.length > 0}}">
+    <view class="stat-item" bindtap="viewBadges">
+      <text class="stat-value">{{stats.totalCountdowns}}</text>
+      <text class="stat-label">倒计时</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{stats.totalCheckIns}}</text>
+      <text class="stat-label">总打卡</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item" bindtap="viewBadges">
+      <text class="stat-value">{{stats.badges.length}}</text>
+      <text class="stat-label">徽章</text>
+    </view>
+  </view>
+  
+  <!-- 倒计时列表 -->
   <view class="countdown-list">
-    <view class="countdown-card" wx:for="{{countdowns}}" wx:key="_id" style="border-left-color: {{item.style.backgroundColor}}">
+    <view 
+      class="countdown-card {{item.isExpired ? 'expired' : ''}}" 
+      wx:for="{{countdowns}}" 
+      wx:key="_id"
+      style="border-left-color: {{item.style?.backgroundColor || '#FF6B6B'}};"
+      bindtap="editCountdown"
+      data-id="{{item._id}}"
+    >
       <view class="countdown-main">
-        <view class="countdown-icon">{{item.style.icon}}</view>
+        <view class="countdown-icon" style="background: {{item.style?.backgroundColor}}20;">
+          {{item.style?.icon || '⏰'}}
+        </view>
         <view class="countdown-info">
           <text class="countdown-title">{{item.title}}</text>
           <text class="countdown-date">{{item.targetDate}}</text>
+          <view class="countdown-meta">
+            <text class="streak-badge" wx:if="{{item.streak > 0}}">
+              🔥 {{item.streak}}天
+            </text>
+            <text class="badge-count" wx:if="{{item.badges?.length > 0}}">
+              🏅 {{item.badges.length}}
+            </text>
+          </view>
         </view>
       </view>
-      <view class="countdown-days">
-        <text class="days-number">{{item.daysLeft}}</text>
-        <text class="days-text">天</text>
+      
+      <view class="countdown-right">
+        <view class="countdown-days {{item.isExpired ? 'expired' : ''}}">
+          <text class="days-number">{{item.isExpired ? '已过期' : item.daysLeft}}</text>
+          <text class="days-text" wx:if="{{!item.isExpired}}">天</text>
+        </view>
+        
+        <!-- 打卡按钮 -->
+        <view 
+          class="checkin-btn {{item.hasCheckedInToday ? 'checked' : ''}}"
+          catchtap="{{item.hasCheckedInToday ? '' : 'checkIn'}}"
+          data-id="{{item._id}}"
+        >
+          <text wx:if="{{!item.hasCheckedInToday}}">打卡</text>
+          <text wx:else>已打卡</text>
+        </view>
+      </view>
+      
+      <!-- 进度条 -->
+      <view class="progress-bar" wx:if="{{item.progress !== undefined}}">
+        <view class="progress-fill" style="width: {{item.progress}}%; background: {{item.style?.backgroundColor}};"></view>
       </view>
     </view>
   </view>
   
-  <view class="empty-state" wx:if="{{countdowns.length === 0}}">
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading && countdowns.length === 0}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+  
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && countdowns.length === 0}}">
     <text class="empty-icon">📅</text>
     <text class="empty-text">还没有倒计时</text>
     <text class="empty-hint">添加第一个重要日子吧~</text>
   </view>
   
-  <button class="btn btn-primary float-bottom" bindtap="createCountdown">+ 新建倒计时</button>
+  <!-- 新建按钮 -->
+  <button class="btn btn-primary float-bottom" bindtap="createCountdown">
+    <text class="btn-icon">+</text>
+    <text>新建倒计时</text>
+  </button>
 </view>

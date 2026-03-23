@@ -1,31 +1,114 @@
 <!--posts/pages/list/list.wxml-->
 <view class="container">
-  <view class="post-tabs">
-    <view class="tab {{currentTab === 'all' ? 'active' : ''}}" bindtap="switchTab" data-tab="all">全部</view>
-    <view class="tab {{currentTab === '吐槽' ? 'active' : ''}}" bindtap="switchTab" data-tab="吐槽">吐槽</view>
-    <view class="tab {{currentTab === '求助' ? 'active' : ''}}" bindtap="switchTab" data-tab="求助">求助</view>
-    <view class="tab {{currentTab === '分享' ? 'active' : ''}}" bindtap="switchTab" data-tab="分享">分享</view>
+  <!-- 顶部操作栏 -->
+  <view class="header-bar">
+    <view class="sort-tabs">
+      <view class="sort-tab {{sort === 'newest' ? 'active' : ''}}" bindtap="switchSort" data-sort="newest">
+        最新
+      </view>
+      <view class="sort-tab {{sort === 'hottest' ? 'active' : ''}}" bindtap="switchSort" data-sort="hottest">
+        🔥 热榜
+      </view>
+    </view>
   </view>
   
+  <!-- 分类标签 -->
+  <view class="category-tabs">
+    <view 
+      class="category-tab {{currentTab === tab.id ? 'active' : ''}}" 
+      wx:for="{{tabs}}" 
+      wx:key="id"
+      wx:for-item="tab"
+      bindtap="switchTab" 
+      data-tab="{{tab.id}}"
+    >
+      <text class="tab-icon">{{tab.icon}}</text>
+      <text class="tab-name">{{tab.name}}</text>
+    </view>
+  </view>
+  
+  <!-- 帖子列表 -->
   <view class="post-list">
-    <view class="post-card" wx:for="{{posts}}" wx:key="_id">
+    <view 
+      class="post-card" 
+      wx:for="{{posts}}" 
+      wx:key="_id"
+      bindtap="viewDetail"
+      data-id="{{item._id}}"
+    >
+      <!-- 置顶标识 -->
+      <view class="pinned-badge" wx:if="{{item.isPinned}}">置顶</view>
+      
+      <!-- 头部信息 -->
       <view class="post-header">
         <view class="user-info">
-          <text class="avatar">🎭</text>
-          <text class="nickname">{{item.anonymousId || '匿名用户'}}</text>
+          <view class="avatar">{{item.mood || '🎭'}}</view>
+          <view class="user-meta">
+            <text class="nickname">{{item.anonymousId || '匿名用户'}}</text>
+            <text class="post-time">{{item.timeAgo}}</text>
+          </view>
         </view>
-        <text class="category-tag">{{item.category}}</text>
+        <view class="category-tag" style="background: {{item.category === '吐槽' ? '#ffebee' : item.category === '求助' ? '#fff3e0' : item.category === '分享' ? '#e8f5e9' : '#f3e5f5'}}; color: {{item.category === '吐槽' ? '#c62828' : item.category === '求助' ? '#e65100' : item.category === '分享' ? '#2e7d32' : '#7b1fa2'}};">
+          {{item.category}}
+        </view>
       </view>
-      <text class="post-content">{{item.content}}</text>
+      
+      <!-- 内容 -->
+      <view class="post-content">
+        <text class="content-text">{{item.content}}</text>
+        <!-- 标签 -->
+        <view class="post-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+          <text class="tag" wx:for="{{item.tags}}" wx:key="index" wx:for-item="tag">#{{tag}}</text>
+        </view>
+      </view>
+      
+      <!-- 底部操作 -->
       <view class="post-footer">
-        <text class="post-time">{{item.timeAgo}}</text>
         <view class="post-actions">
-          <text class="action" bindtap="likePost" data-id="{{item._id}}">👍 {{item.stats.likes}}</text>
-          <text class="action">💬 {{item.stats.comments}}</text>
+          <view 
+            class="action {{item.isLiked ? 'liked' : ''}}" 
+            catchtap="likePost"
+            data-id="{{item._id}}"
+          >
+            <text class="action-icon">{{item.isLiked ? '❤️' : '🤍'}}</text>
+            <text class="action-count">{{item.stats.likes}}</text>
+          </view>
+          <view class="action" catchtap="viewDetail" data-id="{{item._id}}">
+            <text class="action-icon">💬</text>
+            <text class="action-count">{{item.stats.comments}}</text>
+          </view>
+          <view class="action" catchtap="sameHere" data-id="{{item._id}}">
+            <text class="action-icon">🙋</text>
+            <text class="action-count">{{item.stats.sameHere || '我也一样'}}</text>
+          </view>
+        </view>
+        <view class="view-count">
+          <text class="view-icon">👁</text>
+          <text>{{item.stats.views || 0}}</text>
         </view>
       </view>
     </view>
   </view>
   
-  <view class="float-btn" bindtap="createPost">+</view>
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text>加载中...</text>
+  </view>
+  
+  <view class="load-more" wx:if="{{!hasMore && posts.length > 0}}">
+    <text>没有更多了</text>
+  </view>
+  
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && posts.length === 0}}">
+    <text class="empty-icon">🌳</text>
+    <text class="empty-text">还没有帖子</text>
+    <text class="empty-hint">来做第一个发帖的人吧~</text>
+  </view>
+  
+  <!-- 发布按钮 -->
+  <view class="float-btn" bindtap="createPost">
+    <text class="float-icon">+</text>
+  </view>
 </view>

@@ -2,26 +2,110 @@
 <view class="container">
   <view class="title text-center mb-30">🎯 每日运势</view>
   
-  <view class="card fortune-result" wx:if="{{fortune}}">
-    <view class="fortune-badge">{{fortune.result.level}}</view>
-    <text class="fortune-title">{{fortune.result.title}}</text>
-    <text class="fortune-content">{{fortune.result.content}}</text>
-    <text class="fortune-advice">💡 {{fortune.result.advice}}</text>
+  <!-- 加载状态 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">正在测算今日运势...</text>
+  </view>
+  
+  <!-- 错误状态 -->
+  <view class="error-state" wx:elif="{{error}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">{{error}}</text>
+    <button class="btn btn-primary mt-20" bindtap="loadFortune">重新加载</button>
+  </view>
+  
+  <!-- 运势结果 -->
+  <view class="fortune-card" wx:elif="{{fortune}}" style="border-color: {{fortune.levelColor}};">
+    <!-- 运势等级 -->
+    <view class="fortune-header" style="background: {{fortune.levelColor}};">
+      <text class="fortune-level">{{fortune.level}}</text>
+      <text class="fortune-score">{{fortune.levelScore}}分</text>
+    </view>
     
-    <view class="detail-grid">
-      <view class="detail-item" wx:for="{{fortune.details}}" wx:key="index">
-        <text class="detail-name">{{item.desc}}</text>
-        <text class="detail-score">{{item.score}}分</text>
+    <view class="fortune-body">
+      <!-- 运势文案 -->
+      <view class="fortune-main">
+        <text class="fortune-category" wx:if="{{fortune.category === 'resign'}}">🎉 宜提离职</text>
+        <text class="fortune-category" wx:elif="{{fortune.category === 'prepare'}}">📋 宜准备</text>
+        <text class="fortune-category" wx:elif="{{fortune.category === 'hold'}}">🛡️ 宜苟住</text>
+        <text class="fortune-category" wx:else>☕ 宜摸鱼</text>
+        
+        <text class="fortune-content">{{fortune.content}}</text>
+        <text class="fortune-advice">💡 {{fortune.advice}}</text>
       </view>
+      
+      <!-- 维度评分 -->
+      <view class="dimensions-section">
+        <view class="section-title">运势详情</view>
+        <view class="dimensions-grid">
+          <view class="dimension-item" wx:for="{{fortune.dimensions}}" wx:key="index" wx:for-item="dim">
+            <view class="dimension-info">
+              <text class="dimension-label">{{dim.label}}</text>
+              <text class="dimension-desc">{{dim.desc}}</text>
+            </view>
+            <view class="dimension-score" style="color: {{dim.score >= 70 ? '#4CAF50' : dim.score >= 50 ? '#FF9800' : '#F44336'}};">
+              {{dim.score}}分
+            </view>
+            <view class="dimension-bar">
+              <view class="dimension-bar-fill" style="width: {{dim.score}}%; background: {{dim.score >= 70 ? '#4CAF50' : dim.score >= 50 ? '#FF9800' : '#F44336'}};"></view>
+            </view>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 幸运元素 -->
+      <view class="lucky-section">
+        <view class="lucky-item">
+          <text class="lucky-icon">🎨</text>
+          <text class="lucky-label">幸运色</text>
+          <text class="lucky-value">{{fortune.luckyColor?.name || '红色'}}</text>
+        </view>
+        <view class="lucky-item">
+          <text class="lucky-icon">🔢</text>
+          <text class="lucky-label">幸运数字</text>
+          <text class="lucky-value">{{fortune.luckyNumbers?.join(', ') || '7, 8, 9'}}</text>
+        </view>
+        <view class="lucky-item" wx:if="{{fortune.luckyDirection}}">
+          <text class="lucky-icon">🧭</text>
+          <text class="lucky-label">幸运方向</text>
+          <text class="lucky-value">{{fortune.luckyDirection}}</text>
+        </view>
+      </view>
+      
+      <!-- 宜忌 -->
+      <view class="suitable-section" wx:if="{{fortune.suitable}}">
+        <view class="suitable-box">
+          <text class="suitable-title">✅ 宜</text>
+          <text class="suitable-item" wx:for="{{fortune.suitable}}" wx:key="index">{{item}}</text>
+        </view>
+        <view class="avoid-box" wx:if="{{fortune.avoid}}">
+          <text class="avoid-title">❌ 忌</text>
+          <text class="avoid-item" wx:for="{{fortune.avoid}}" wx:key="index">{{item}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="fortune-actions">
+      <button class="btn btn-primary" open-type="share">分享给好友</button>
+      <button class="btn btn-default" bindtap="drawFortune">重新抽签</button>
     </view>
   </view>
   
-  <view class="card" wx:else>
-    <view class="draw-area">
-      <text class="draw-hint">今天还没有抽签哦~</text>
-      <button class="btn btn-primary" bindtap="drawFortune">立即抽签</button>
-    </view>
+  <!-- 未抽签状态 -->
+  <view class="draw-card" wx:else>
+    <view class="draw-icon">🎋</view>
+    <text class="draw-title">今日运势</text>
+    <text class="draw-hint">抽取你的每日职场运势，看看今天是否适合提离职~</text>
+    <button class="btn btn-primary btn-large" bindtap="drawFortune">
+      <text class="btn-icon">✨</text>
+      <text>立即抽签</text>
+    </button>
   </view>
   
   <button class="btn btn-default mt-30" bindtap="goBack">返回首页</button>
+  
+  <!-- 隐藏的画布用于生成分享图片 -->
+  <canvas canvas-id="shareCanvas" style="width: 300px; height: 400px; position: fixed; left: -9999px;"></canvas>
 </view>
